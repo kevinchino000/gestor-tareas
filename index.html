@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Estilos para el Modo Oscuro */
+        .dark-mode .bg-white { background-color: #1e293b; color: white; }
+        .dark-mode .bg-gray-50 { background-color: #334155; }
+        .dark-mode .text-gray-700 { color: #f1f5f9; }
+        .dark-mode .border-gray-100 { border-color: #475569; }
+        .dark-mode #inputTarea, .dark-mode #selectPrioridad { color: white; background-color: #0f172a; border: none; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tarea-animada { animation: fadeIn 0.3s ease-out forwards; }
+        body { background: radial-gradient(circle at top, #1e293b, #0f172a); transition: background 0.3s ease; }
+        
+        /* Scrollbar elegante */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-gray-100 transition-colors duration-300">
+        <div class="bg-indigo-600 p-8 text-white relative">
+            <button onclick="toggleDarkMode()" class="absolute top-4 right-4 text-indigo-200 hover:text-white transition-colors">
+                <i id="darkIcon" class="fas fa-moon text-xl"></i>
+            </button>
+            <h1 class="text-3xl font-extrabold tracking-tight">Mi Día</h1>
+            <p id="fecha" class="text-indigo-100 text-sm opacity-90 capitalize"></p>
+            
+            <div class="mt-6 bg-indigo-800/40 p-3 rounded-xl backdrop-blur-sm">
+                <div class="flex justify-between text-xs mb-1 font-bold">
+                    <span>PROGRESO TOTAL</span>
+                    <span id="porcentaje">0%</span>
+                </div>
+                <div class="w-full bg-indigo-900/30 rounded-full h-1.5">
+                    <div id="barra" class="bg-white h-1.5 rounded-full transition-all duration-700 w-0"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <div class="flex flex-col gap-2 mb-8">
+                <div class="flex gap-2">
+                    <input type="text" id="inputTarea" placeholder="Añadir una tarea..." 
+                        class="w-full pl-4 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner">
+                    
+                    <select id="selectPrioridad" class="bg-gray-50 border-none rounded-xl px-2 text-sm text-gray-500 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                        <option value="baja">Normal</option>
+                        <option value="media">Importante</option>
+                        <option value="alta">Urgente</option>
+                    </select>
+                </div>
+                <button onclick="crearTarea()" class="w-full bg-indigo-600 text-white py-3 rounded-xl hover:bg-indigo-700 transition-all shadow-lg active:scale-95 font-bold">
+                    <i class="fas fa-plus mr-2"></i> AGREGAR TAREA
+                </button>
+            </div>
+
+            <ul id="listaTareas" class="space-y-3 max-h-[300px] overflow-y-auto pr-2"></ul>
+
+            <div class="mt-8 border-t border-gray-100 pt-4">
+                <button onclick="toggleCompletadas()" class="flex items-center gap-2 text-gray-400 hover:text-indigo-600 transition-all font-bold text-xs uppercase tracking-widest mb-4">
+                    <i id="flechaCompletadas" class="fas fa-chevron-right transition-transform"></i>
+                    Tareas Finalizadas (<span id="contadorCompletadas">0</span>)
+                </button>
+                
+                <ul id="listaCompletadas" class="space-y-3 hidden opacity-70 pr-2">
+                    </ul>
+            </div>
+
+            <div id="footerApp" class="mt-6 pt-4 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400 hidden">
+                <span id="tareasPendientes">0 pendientes</span>
+                <button onclick="limpiarCompletadas()" class="hover:text-indigo-600 font-semibold transition-colors">
+                    Borrar todo el historial
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
