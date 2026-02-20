@@ -12,7 +12,9 @@
         .dark-mode .bg-gray-50 { background-color: #334155; }
         .dark-mode .text-gray-700 { color: #f1f5f9; }
         .dark-mode .border-gray-100 { border-color: #475569; }
-        .dark-mode #inputTarea, .dark-mode #selectPrioridad { color: white; background-color: #0f172a; border: none; }
+        .dark-mode #inputTarea, .dark-mode #selectPrioridad, .dark-mode #inputFecha { color: white; background-color: #0f172a; border: none; }
+        /* Cambiar color del ícono de calendario en modo oscuro */
+        .dark-mode input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
         
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -48,18 +50,21 @@
         </div>
 
         <div class="p-6">
-            <div class="flex flex-col gap-2 mb-8">
+            <div class="flex flex-col gap-3 mb-8">
+                <input type="text" id="inputTarea" placeholder="¿Qué necesitas hacer?" 
+                    class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner">
+                
                 <div class="flex gap-2">
-                    <input type="text" id="inputTarea" placeholder="Añadir una tarea..." 
-                        class="w-full pl-4 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner">
+                    <input type="date" id="inputFecha" class="w-1/2 bg-gray-50 border-none rounded-xl px-3 py-2 text-sm text-gray-500 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer" title="Fecha límite">
                     
-                    <select id="selectPrioridad" class="bg-gray-50 border-none rounded-xl px-2 text-sm text-gray-500 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                    <select id="selectPrioridad" class="w-1/2 bg-gray-50 border-none rounded-xl px-3 py-2 text-sm text-gray-500 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
                         <option value="baja">Normal</option>
                         <option value="media">Importante</option>
                         <option value="alta">Urgente</option>
                     </select>
                 </div>
-                <button onclick="crearTarea()" class="w-full bg-indigo-600 text-white py-3 rounded-xl hover:bg-indigo-700 transition-all shadow-lg active:scale-95 font-bold">
+                
+                <button onclick="crearTarea()" class="w-full mt-1 bg-indigo-600 text-white py-3 rounded-xl hover:bg-indigo-700 transition-all shadow-lg active:scale-95 font-bold">
                     <i class="fas fa-plus mr-2"></i> AGREGAR TAREA
                 </button>
             </div>
@@ -72,8 +77,7 @@
                     Tareas Finalizadas (<span id="contadorCompletadas">0</span>)
                 </button>
                 
-                <ul id="listaCompletadas" class="space-y-3 hidden opacity-70 pr-2">
-                    </ul>
+                <ul id="listaCompletadas" class="space-y-3 hidden opacity-70 pr-2"></ul>
             </div>
 
             <div id="footerApp" class="mt-6 pt-4 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400 hidden">
