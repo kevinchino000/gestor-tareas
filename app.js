@@ -3,43 +3,50 @@ const listaPendientes = document.getElementById('listaTareas');
 const listaCompletadas = document.getElementById('listaCompletadas');
 const fechaElemento = document.getElementById('fecha');
 
-// Inicialización de fecha
+// 1. Inicialización de fecha
 const fechaActual = new Date();
 fechaElemento.innerHTML = fechaActual.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
 // ==========================================
-// NUEVO: SISTEMA DE NOTIFICACIONES
+// SISTEMA DE NOTIFICACIONES INTEGRADO
 // ==========================================
-// 1. Pedir permiso al usuario al entrar a la app
-if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+
+// Pedir permiso apenas cargue la página si no se ha decidido aún
+if ("Notification" in window && Notification.permission !== "granted") {
     Notification.requestPermission();
 }
 
+// Función ayudante para lanzar la notificación al sistema
+function enviarAlertaWeb(titulo, mensaje) {
+    if (Notification.permission === "granted") {
+        new Notification(titulo, {
+            body: mensaje,
+            icon: "https://cdn-icons-png.flaticon.com/512/1828/1828614.png"
+        });
+    }
+}
+
+// Función para revisar tareas próximas a vencer
 function revisarNotificaciones() {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
 
     let tareas = JSON.parse(localStorage.getItem('tareas') || "[]");
     let huboCambios = false;
-    
     const hoy = new Date();
     hoy.setHours(0,0,0,0);
 
     tareas.forEach(tarea => {
-        // Solo avisar de tareas no completadas, que tienen fecha y que NO se han notificado antes
+        // Notificar si no está completada, tiene fecha y NO ha sido notificada hoy
         if (!tarea.completada && tarea.fechaVencimiento && !tarea.notificada) {
             const fechaT = new Date(tarea.fechaVencimiento + 'T00:00:00');
             const diffTiempo = fechaT.getTime() - hoy.getTime();
             const diffDias = Math.ceil(diffTiempo / (1000 * 60 * 60 * 24));
 
-            // Si la tarea vence HOY o MAÑANA
             if (diffDias === 0 || diffDias === 1) {
                 const diaTexto = diffDias === 0 ? "HOY" : "MAÑANA";
-                new Notification("¡Tarea próxima a vencer!", {
-                    body: `Tu tarea "${tarea.nombre}" vence ${diaTexto}.`,
-                    icon: "https://cdn-icons-png.flaticon.com/512/1828/1828614.png"
-                });
+                enviarAlertaWeb("¡Tarea próxima a vencer!", `Tu tarea "${tarea.nombre}" vence ${diaTexto}.`);
                 
-                tarea.notificada = true; // Marcar para no enviarle spam al usuario
+                tarea.notificada = true; 
                 huboCambios = true;
             }
         }
@@ -50,12 +57,12 @@ function revisarNotificaciones() {
     }
 }
 
-// Revisar notificaciones al iniciar y luego cada 10 minutos (600000 ms)
-setTimeout(revisarNotificaciones, 2000);
-setInterval(revisarNotificaciones, 600000); 
+// Revisión automática
+setTimeout(revisarNotificaciones, 2000); // 2 segundos después de cargar
+setInterval(revisarNotificaciones, 600000); // Cada 10 minutos
 
 // ==========================================
-// RESTO DE LA APLICACIÓN
+// LÓGICA DE LA APLICACIÓN
 // ==========================================
 
 function mostrarTareas() {
@@ -63,7 +70,6 @@ function mostrarTareas() {
     listaCompletadas.innerHTML = ''; 
     
     const tareas = JSON.parse(localStorage.getItem('tareas') || "[]");
-
     const pendientes = tareas.filter(t => !t.completada);
     const completadas = tareas.filter(t => t.completada);
 
@@ -79,7 +85,6 @@ function mostrarTareas() {
 
     pendientes.forEach(tarea => listaPendientes.appendChild(crearElementoTarea(tarea)));
     completadas.forEach(tarea => listaCompletadas.appendChild(crearElementoTarea(tarea)));
-
     actualizarMetricas(tareas);
 }
 
@@ -88,15 +93,12 @@ function crearElementoTarea(tarea) {
     const colores = { alta: 'border-l-4 border-l-red-500', media: 'border-l-4 border-l-yellow-500', baja: 'border-l-4 border-l-green-500' };
     const colorClase = colores[tarea.prioridad] || 'border-l-4 border-l-gray-300';
 
-    // Lógica visual para la fecha de vencimiento
     let fechaHtml = '';
     if (tarea.fechaVencimiento) {
         const fechaT = new Date(tarea.fechaVencimiento + 'T00:00:00');
         const hoy = new Date();
         hoy.setHours(0,0,0,0);
-        
-        const diffTiempo = fechaT.getTime() - hoy.getTime();
-        const diffDias = Math.ceil(diffTiempo / (1000 * 60 * 60 * 24));
+        const diffDias = Math.ceil((fechaT.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
         
         let colorFecha = 'text-gray-400';
         let textoExtra = '';
@@ -114,7 +116,6 @@ function crearElementoTarea(tarea) {
     }
 
     li.className = `tarea-animada flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl group hover:shadow-md transition-all dark:bg-slate-800 ${colorClase}`;
-    
     li.innerHTML = `
         <div class="flex items-center gap-4 w-full">
             <div class="relative flex items-center shrink-0">
@@ -149,18 +150,23 @@ function crearTarea() {
         nombre: texto, 
         completada: false, 
         prioridad: prioridad,
-        fechaVencimiento: fechaVencimiento, // Guardamos la fecha
-        notificada: false // Control de spam de notificaciones
+        fechaVencimiento: fechaVencimiento, 
+        notificada: false 
     };
 
     const tareas = JSON.parse(localStorage.getItem('tareas') || "[]");
     tareas.unshift(nuevaTarea); 
     localStorage.setItem('tareas', JSON.stringify(tareas));
     
+    // Lanzar notificación inmediata si es importante/urgente
+    if (prioridad === 'alta' || prioridad === 'media') {
+        enviarAlertaWeb("¡Tarea Guardada!", `Has añadido: ${texto}`);
+    }
+
     input.value = ''; 
-    document.getElementById('inputFecha').value = ''; // Limpiar fecha
+    document.getElementById('inputFecha').value = ''; 
     mostrarTareas();
-    revisarNotificaciones(); // Revisar al instante si la nueva tarea vence pronto
+    revisarNotificaciones(); 
 }
 
 function toggleTarea(id) {
@@ -197,9 +203,7 @@ function actualizarMetricas(tareas) {
     const total = tareas.length;
     const completadas = tareas.filter(t => t.completada).length;
     const pendientes = total - completadas;
-    
     const porc = total === 0 ? 0 : Math.round((completadas / total) * 100);
-    
     document.getElementById('barra').style.width = porc + "%";
     document.getElementById('porcentaje').innerText = porc + "%";
     document.getElementById('tareasPendientes').innerText = `${pendientes} pendientes`;
